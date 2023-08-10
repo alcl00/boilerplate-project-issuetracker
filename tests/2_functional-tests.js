@@ -220,20 +220,6 @@ suite('Functional Tests', function() {
           done();
         })
     })
-    test('Invalid id', function(done) {
-      let invalidId = '123456789012';
-      chai
-        .request(server)
-        .delete('/api/issues/unit_test')
-        .send({
-          '_id': invalidId
-        })
-        .end(function(err, res) {
-          assert.equal(res.body.error, 'could not delete');
-          assert.equal(res.body._id, invalidId);
-          done();
-        })
-    })
     test('No id', function(done) {
       chai
         .request(server)

@@ -69,7 +69,7 @@ module.exports = function(app) {
           updateFields[key] = req.body[key];
         })
 
-        
+
         if(Object.keys(updateFields).length < 2) {
           res.send({ error: 'no update field(s) sent', '_id': req.body._id })
         }
@@ -95,6 +95,24 @@ module.exports = function(app) {
 
     .delete(function(req, res) {
       let project = req.params.project;
+
+      if(!req.body._id) {
+        res.send({ error: 'missing _id' })
+      }
+      else {
+        IssueModel.findByIdAndDelete(req.body._id)
+        .then(removedIssue => {
+          if(removedIssue) {
+            res.send({ result: 'successfully deleted', '_id': req.body._id })
+          }
+          else {
+            res.send({ error: 'could not delete', '_id': req.body._id })
+          }
+        })
+        .catch(err => {
+          res.send({ error: 'could not delete', '_id': req.body._id })
+        })
+      }
 
     });
 
