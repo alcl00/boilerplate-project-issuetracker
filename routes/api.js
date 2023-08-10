@@ -1,6 +1,7 @@
 'use strict';
 const IssueModel = require('../models').Issue;
 const ProjectModel = require('../models').Project;
+const ObjectId = require('mongoose').ObjectId
 
 module.exports = function(app) {
 
@@ -8,11 +9,21 @@ module.exports = function(app) {
 
     .get(function(req, res) {
       let project = req.params.project;
+
+      let queries = {};
+      queries['name'] = project;
       
-      ProjectModel.findOne({name: project})
+      Object.keys(req.query).forEach((key,index) => {
+        let queryName = "issues." + key
+        queries[queryName] = req.query[key];
+      })
+
+      console.log(queries)
+      
+      ProjectModel.find(queries)
       .then(data => {
-        res.json(data.issues);
-      });
+        res.json(data[0].issues);
+      })
     })
 
     .post(function(req, res) {

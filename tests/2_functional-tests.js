@@ -72,15 +72,25 @@ suite('Functional Tests', function() {
       })
       
     });
-  test('Test GET /api/issues/{project}', function(done) {
-    /*chai
+  test('Test GET /api/issues/{project} with just a project name', function(done) {
+    chai
       .request(server)
       .keepOpen()
       .get('/api/issues/apitest')
       .end(function(err, res) {
-        
+        assert.equal(res.status, '200')
         done();
-      })*/
+      })
+  });
+  test('Test GET /api/issues/{project} with query', function(done) {
+    chai
+      .request(server)
+      .keepOpen()
+      .get('/api/issues/apitest?open=true')
+      .end(function(err, res) {
+        assert.equal(res.status, '200')
+        done();
+      })
   });
   
 });
