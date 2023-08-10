@@ -68,7 +68,8 @@ module.exports = function(app) {
         Object.keys(req.body).forEach((key, value) => {
           updateFields[key] = req.body[key];
         })
-        console.log(updateFields);
+
+        
         if(Object.keys(updateFields).length < 2) {
           res.send({ error: 'no update field(s) sent', '_id': req.body._id })
         }
