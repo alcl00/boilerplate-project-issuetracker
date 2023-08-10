@@ -1,6 +1,4 @@
 'use strict';
-const mongoose = require("mongoose");
-const { Project } = require("../models");
 const IssueModel = require('../models').Issue;
 const ProjectModel = require('../models').Project;
 
@@ -10,10 +8,10 @@ module.exports = function(app) {
 
     .get(function(req, res) {
       let project = req.params.project;
-      console.log(project);
+      
       ProjectModel.findOne({name: project})
       .then(data => {
-        res.send(data.issues);
+        res.json(data.issues);
       });
     })
 
@@ -36,27 +34,22 @@ module.exports = function(app) {
       }
       else {
         ProjectModel.findOne({name: project})
-        .then(async projectData => {
+        .then(async function(projectData) {
           if(!projectData) {
-            let newProject = await ProjectModel.create({name: project});
-            newProject.issues.push(newIssue);
-            newProject.save((error, savedIssue) => {
-              if(err || !savedIssue) {
-                res.json("Error adding issue")
-              }
-            })
+            await ProjectModel.create({name: project, issues: [newIssue]})
           }
           else {
-            projectData.issues.push(newIssue);
+            
+            ProjectModel.findOneAndUpdate({name: project}, {$push: {issues: newIssue}})
+            .then((err, data) => {
+              if(err) throw err
+            })
           }
         })
-        .then(async function(){
-          await IssueModel.create(newIssue);
-
-          res.json(newIssue);
-          //res.send(newIssue);
+        .then(async() => {
+          await IssueModel.create(newIssue)
         })
-
+        res.json(newIssue);
       }
     })
 
