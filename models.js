@@ -10,17 +10,10 @@ const issueSchema = new Schema({
   issue_text: {type: String, required: true},
   created_by: {type: String, required: true},
   created_on: Date,
-  updated_on: Date
+  updated_on: Date,
+  project_name: String
 }, {versionKey: false});
 
 let Issue = mongoose.model("Issue", issueSchema);
 
-const projectSchema = new Schema({
-  name: {type: String, required: true},
-  issues: [issueSchema]
-}, {versionKey: false});
-
-let Project = mongoose.model("Project", projectSchema);
-
 exports.Issue = Issue;
-exports.Project = Project;

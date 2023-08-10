@@ -7,7 +7,7 @@ chai.use(chaiHttp);
 
 suite('Functional Tests', function() {
   test('Test POST /api/issues/{project} only with required parameters', function(done) {
-    let projectName = "apitest";
+    let projectName = "unit_test";
     let expected = {
       issue_title: "title",
       issue_text: "text",
@@ -28,7 +28,7 @@ suite('Functional Tests', function() {
     
   });
   test('Test POST /api/issues/{project} with all parameters', function(done) {
-    let projectName = "apitest";
+    let projectName = "unit_test";
     let expected = {
       issue_title: 'title',
       issue_text: 'text',
@@ -56,7 +56,7 @@ suite('Functional Tests', function() {
       
   });
   test('Test POST /api/issues/{project} without required parameters', function(done) {
-    let projectName = "apitest";
+    let projectName = "unit_test";
     let expected = {
       createdOn: new Date()
     }
@@ -76,21 +76,30 @@ suite('Functional Tests', function() {
     chai
       .request(server)
       .keepOpen()
-      .get('/api/issues/apitest')
+      .get('/api/issues/unit_test')
       .end(function(err, res) {
         assert.equal(res.status, '200')
+        assert.notEqual(res.body, {});
         done();
       })
   });
-  test('Test GET /api/issues/{project} with query', function(done) {
+  test('Test GET /api/issues/{project} with queries', function(done) {
     chai
       .request(server)
       .keepOpen()
-      .get('/api/issues/apitest?open=true')
+      .get('/api/issues/unit_test?open=true&status_text=status')
       .end(function(err, res) {
         assert.equal(res.status, '200')
+        assert.notEqual(res.body, {});
         done();
       })
   });
+  /*test('TEST PUT /api/issues/{project} with valid input'), function(done) {
+    chai
+      .request(server)
+      .keepOpen()
+      .put('/api/issues/unit_test')
+      .
+  }*/
   
 });
