@@ -11,7 +11,6 @@ const issueSchema = new Schema(
     created_by: { type: String, required: true },
     created_on: Date,
     updated_on: Date,
-    project_name: String,
   },
   { versionKey: false }
 );
