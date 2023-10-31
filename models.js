@@ -16,4 +16,12 @@ const issueSchema = new Schema({
 
 let Issue = mongoose.model("Issue", issueSchema);
 
+const projectSchema = new Schema({
+  project_name: String,
+  issues: [issueSchema]
+});
+
+let Project = mongoose.model("Project", projectSchema);
+
 exports.Issue = Issue;
+exports.Project = Project;
