@@ -103,8 +103,6 @@ module.exports = function (app) {
           return projectData.save().then();
         })
         .then((result) => {
-          console.log("in final then");
-          console.log(req.body._id);
           res.json({ result: "successfully updated", _id: req.body._id });
           return;
         })
