@@ -1,7 +1,6 @@
 "use strict";
 const IssueModel = require("../models").Issue;
 const ProjectModel = require("../models").Project;
-const ObjectId = require("mongoose").Types.ObjectId;
 
 module.exports = function (app) {
   app
@@ -12,7 +11,12 @@ module.exports = function (app) {
       let issue = req.query;
 
       ProjectModel.findOne({ project_name: project })
-        .then((ProjectData) => {
+        .then(async (ProjectData) => {
+          if (!ProjectData) {
+            await ProjectModel.create({ project_name: project });
+            res.send([]);
+            return;
+          }
           let issues = ProjectData.issues;
 
           issues = issues.filter((element) =>
@@ -20,7 +24,8 @@ module.exports = function (app) {
               (key) => element[key].toString() === issue[key]
             )
           );
-          res.json(issues);
+          res.send(issues);
+          return;
         })
         .catch((error) => {
           console.log(error);
@@ -30,46 +35,42 @@ module.exports = function (app) {
     .post(function (req, res) {
       let project_name = req.params.project;
 
+      if (
+        !req.body.issue_title ||
+        !req.body.issue_text ||
+        !req.body.created_by
+      ) {
+        res.send({ error: "required field(s) missing" });
+        return;
+      }
+
+      let newIssue = new IssueModel({
+        assigned_to: req.body.assigned_to || "",
+        status_text: req.body.status_text || "",
+        open: true,
+        issue_title: req.body.issue_title || "",
+        issue_text: req.body.issue_text || "",
+        created_on: new Date(),
+        updated_on: new Date(),
+        created_by: req.body.created_by || "",
+      });
+
       ProjectModel.findOne({ project_name: project_name })
         .then((ProjectData) => {
-          let project;
           if (!ProjectData) {
-            project = new ProjectModel({
+            ProjectData = new ProjectModel({
               project_name: project_name,
               issues: [],
             });
-          } else {
-            project = ProjectData;
           }
-          let newIssue = new IssueModel({
-            assigned_to: req.body.assigned_to || "",
-            status_text: req.body.status_text || "",
-            open: true,
-            issue_title: req.body.issue_title || "",
-            issue_text: req.body.issue_text || "",
-            created_on: new Date(),
-            updated_on: new Date(),
-            created_by: req.body.created_by || "",
-          });
-
-          if (
-            !(
-              newIssue.issue_title &&
-              newIssue.issue_text &&
-              newIssue.created_by
-            )
-          ) {
-            res.send({ error: "required field(s) missing" });
-            return;
-          } else {
-            project.issues.push(newIssue);
-            project.save().then((data) => {
-              res.json(newIssue);
-            });
-          }
+          ProjectData.issues.push(newIssue);
+          return ProjectData.save();
+        })
+        .then((result) => {
+          res.json(newIssue);
         })
         .catch((error) => {
-          console.log(error);
+          res.send({ error: error.message });
         });
     })
 
@@ -79,33 +80,36 @@ module.exports = function (app) {
 
       if (!updateFields._id) {
         res.send({ error: "missing _id" });
+        return;
       }
       if (Object.keys(updateFields).length <= 1) {
         res.send({ error: "no update field(s) sent", _id: updateFields._id });
+        return;
       }
 
       ProjectModel.findOne({ project_name: project_name })
         .then((projectData) => {
           if (!projectData) {
-            res.send({ error: "could not update", _id: updateFields._id });
-            return;
+            throw new Error("could not update");
           }
           let issue = projectData.issues.id(updateFields._id);
           if (!issue) {
-            res.send({ error: "could not update", _id: updateFields._id });
-            return;
+            throw new Error("could not update");
           }
-          delete updateFields._id;
           Object.keys(updateFields).forEach((key) => {
-            issue[key] = updateFields[key];
+            if (updateFields[key]) issue[key] = updateFields[key];
           });
           issue.updated_on = new Date();
-          projectData.save().then((result) => {
-            res.json({ result: "successfully updated", _id: issue._id });
-          });
+          return projectData.save().then();
+        })
+        .then((result) => {
+          console.log("in final then");
+          console.log(req.body._id);
+          res.json({ result: "successfully updated", _id: req.body._id });
+          return;
         })
         .catch((error) => {
-          res.send({ error: "could not update", _id: updateFields._id });
+          res.send({ error: error.message, _id: req.body._id });
         });
     })
 
@@ -116,22 +120,23 @@ module.exports = function (app) {
         res.send({ error: "missing _id" });
         return;
       }
-      ProjectModel.findOne({ project_name: project_name }).then(
-        (projectData) => {
+      ProjectModel.findOne({ project_name: project_name })
+        .then((projectData) => {
           if (!projectData) {
-            res.send({ error: "could not delete", _id: req.body._id });
-            return;
+            throw new Error("could not delete");
           }
           let issue = projectData.issues.id(req.body._id);
           if (!issue) {
-            res.json({ error: "could not delete", _id: req.body._id });
-            return;
+            throw new Error("could not delete");
           }
           projectData.issues.remove(issue);
-          projectData.save().then((result) => {
-            res.json({ result: "successfully deleted", _id: req.body._id });
-          });
-        }
-      );
+          return projectData.save();
+        })
+        .then((result) => {
+          res.json({ result: "successfully deleted", _id: req.body._id });
+        })
+        .catch((error) => {
+          res.send({ error: error.message, _id: req.body._id });
+        });
     });
 };
